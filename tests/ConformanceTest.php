@@ -38,18 +38,53 @@ final class ConformanceTest extends TestCase
     }
 
     /**
+     * Directories this test owns: the generic-profile full-snapshot codec
+     * (encode/decode/error/roundtrip fixtures only). Sibling fixture
+     * directories belong to their own dedicated test classes:
+     * graph-encode/graph-decode/graph-pack-root -> GraphConformanceTest,
+     * generic-delta/generic-delta-session/generic-pack-root -> GenericDeltaConformanceTest,
+     * graph-delta -> GraphDeltaConformanceTest, graph-session -> GraphSessionConformanceTest,
+     * streaming-v2 -> StreamingConformanceTest.
+     *
+     * @var list<string>
+     */
+    private const OWNED_DIRS = [
+        'arrays', 'attachments', 'containers', 'decode', 'errors-v2',
+        'flatten', 'inline-schema', 'keyed-map', 'keys', 'numbers', 'roots',
+        'scalar', 'whitespace',
+    ];
+
+    /**
+     * Within errors-v2/, these fixtures assert graph-profile or graph-delta
+     * error paths and are covered by GraphConformanceTest / GraphDeltaConformanceTest
+     * instead.
+     *
+     * @var list<string>
+     */
+    private const ERRORS_V2_EXCLUDED = [
+        '028_invalid_graph_node.json',
+        '029_invalid_graph_symbol_id.json',
+        '030_invalid_graph_score.json',
+        '031_invalid_graph_edge_syntax.json',
+        '032_unknown_graph_edge_reference.json',
+        '033_malformed_delta.json',
+        '039_graph_edges_count_surplus.json',
+        '040_graph_edges_count_deficit.json',
+    ];
+
+    /**
      * @return iterable<string, array{0: string}>
      */
     public static function fixtures(): iterable
     {
         $root = __DIR__.'/conformance';
-        $rii = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
-        );
         $paths = [];
-        foreach ($rii as $file) {
-            if ($file->isFile() && $file->getExtension() === 'json') {
-                $paths[] = $file->getPathname();
+        foreach (self::OWNED_DIRS as $dir) {
+            foreach (glob("{$root}/{$dir}/*.json") ?: [] as $path) {
+                if ($dir === 'errors-v2' && in_array(basename($path), self::ERRORS_V2_EXCLUDED, true)) {
+                    continue;
+                }
+                $paths[] = $path;
             }
         }
         sort($paths);

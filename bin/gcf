@@ -1,0 +1,242 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Gcf\Edge;
+use Gcf\Generic\Decoder as GenericDecoder;
+use Gcf\Generic\Encoder as GenericEncoder;
+use Gcf\Graph\Decoder as GraphDecoder;
+use Gcf\Graph\Encoder as GraphEncoder;
+use Gcf\Payload;
+use Gcf\Symbol;
+
+foreach ([__DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'] as $autoload) {
+    if (is_file($autoload)) {
+        require $autoload;
+        break;
+    }
+}
+
+const GCF_PHP_VERSION = '0.1.0';
+
+const USAGE = <<<'USAGE'
+gcf - token-optimized wire format for LLM tool responses
+
+Usage:
+  gcf encode          [file]  Encode JSON graph payload to GCF (stdin if no file)
+  gcf decode          [file]  Decode GCF graph text to JSON (stdin if no file)
+  gcf encode-generic  [file]  Encode JSON to GCF generic profile (stdin if no file)
+  gcf decode-generic  [file]  Decode GCF generic text to JSON (stdin if no file)
+  gcf stats           [file]  Compare token counts: JSON vs GCF (stdin if no file)
+  gcf version                 Print version
+
+Examples:
+  gcf encode < payload.json
+  gcf decode < payload.gcf
+  echo '{"name":"Alice"}' | gcf encode-generic
+  echo 'GCF profile=generic
+name=Alice' | gcf decode-generic
+  gcf stats payload.json
+
+USAGE;
+
+function main(array $argv): int
+{
+    $args = array_slice($argv, 1);
+    if ($args === [] || in_array($args[0], ['-h', '--help', 'help'], true)) {
+        fwrite(STDOUT, USAGE);
+
+        return $args === [] ? 1 : 0;
+    }
+
+    $cmd = $args[0];
+    $fileArgs = array_slice($args, 1);
+
+    return match ($cmd) {
+        'encode' => doEncode(readInput($fileArgs)),
+        'decode' => doDecode(readInput($fileArgs)),
+        'encode-generic' => doEncodeGeneric(readInput($fileArgs)),
+        'decode-generic' => doDecodeGeneric(readInput($fileArgs)),
+        'stats' => doStats(readInput($fileArgs)),
+        'version' => printVersion(),
+        default => unknownCommand($cmd),
+    };
+}
+
+function readInput(array $args): string
+{
+    if ($args !== [] && $args[0] !== '-') {
+        $contents = file_get_contents($args[0]);
+        if ($contents === false) {
+            fwrite(STDERR, "error: cannot read file: {$args[0]}\n");
+            exit(1);
+        }
+
+        return $contents;
+    }
+
+    return (string) stream_get_contents(STDIN);
+}
+
+function payloadFromJson(string $data): Payload
+{
+    $obj = json_decode($data, true, flags: JSON_THROW_ON_ERROR);
+
+    $symbols = array_map(
+        static fn (array $s): Symbol => new Symbol(
+            qualifiedName: $s['qualifiedName'],
+            kind: $s['kind'],
+            score: (float) $s['score'],
+            provenance: $s['provenance'],
+            distance: $s['distance'] ?? 0,
+        ),
+        $obj['symbols'] ?? [],
+    );
+
+    $edges = array_map(
+        static fn (array $e): Edge => new Edge(
+            source: $e['source'],
+            target: $e['target'],
+            edgeType: $e['edgeType'],
+            status: $e['status'] ?? '',
+        ),
+        $obj['edges'] ?? [],
+    );
+
+    return new Payload(
+        tool: $obj['tool'] ?? '',
+        tokensUsed: $obj['tokensUsed'] ?? 0,
+        tokenBudget: $obj['tokenBudget'] ?? 0,
+        packRoot: $obj['packRoot'] ?? '',
+        symbols: $symbols,
+        edges: $edges,
+    );
+}
+
+function payloadToJson(Payload $p): string
+{
+    $obj = [
+        'tool' => $p->tool,
+        'tokensUsed' => $p->tokensUsed,
+        'tokenBudget' => $p->tokenBudget,
+        'packRoot' => $p->packRoot,
+        'symbols' => array_map(
+            static fn (Symbol $s): array => [
+                'qualifiedName' => $s->qualifiedName,
+                'kind' => $s->kind,
+                'score' => $s->score,
+                'provenance' => $s->provenance,
+                'distance' => $s->distance,
+            ],
+            $p->symbols,
+        ),
+        'edges' => array_map(
+            static fn (Edge $e): array => array_filter(
+                [
+                    'source' => $e->source,
+                    'target' => $e->target,
+                    'edgeType' => $e->edgeType,
+                    'status' => $e->status,
+                ],
+                static fn (mixed $v, string $k): bool => $k !== 'status' || $v !== '',
+                ARRAY_FILTER_USE_BOTH,
+            ),
+            $p->edges,
+        ),
+    ];
+
+    return json_encode($obj, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+}
+
+function doEncodeGeneric(string $data): int
+{
+    try {
+        $obj = json_decode($data, true, flags: JSON_THROW_ON_ERROR);
+    } catch (\JsonException $e) {
+        fwrite(STDERR, "error: invalid JSON: {$e->getMessage()}\n");
+
+        return 1;
+    }
+    fwrite(STDOUT, GenericEncoder::encode($obj));
+
+    return 0;
+}
+
+function doDecodeGeneric(string $data): int
+{
+    $result = GenericDecoder::decode($data);
+    fwrite(STDOUT, json_encode($result, JSON_UNESCAPED_SLASHES)."\n");
+
+    return 0;
+}
+
+function doEncode(string $data): int
+{
+    try {
+        $p = payloadFromJson($data);
+    } catch (\Throwable $e) {
+        fwrite(STDERR, "error: invalid JSON: {$e->getMessage()}\n");
+
+        return 1;
+    }
+    fwrite(STDOUT, GraphEncoder::encode($p));
+
+    return 0;
+}
+
+function doDecode(string $data): int
+{
+    $p = GraphDecoder::decode($data);
+    fwrite(STDOUT, payloadToJson($p)."\n");
+
+    return 0;
+}
+
+function doStats(string $data): int
+{
+    try {
+        $p = payloadFromJson($data);
+    } catch (\Throwable $e) {
+        fwrite(STDERR, "error: invalid JSON: {$e->getMessage()}\n");
+
+        return 1;
+    }
+
+    $gcfOutput = GraphEncoder::encode($p);
+    $jsonTokens = intdiv(strlen(trim($data)), 4);
+    $gcfTokens = intdiv(strlen(trim($gcfOutput)), 4);
+
+    $savings = $jsonTokens > 0 ? 100.0 * (1.0 - $gcfTokens / $jsonTokens) : 0.0;
+
+    $barWidth = 30;
+    $jsonBar = str_repeat('█', $barWidth);
+    $gcfFilled = $jsonTokens > 0 ? intdiv($gcfTokens * $barWidth, $jsonTokens) : 0;
+    $gcfBar = str_repeat('█', $gcfFilled).str_repeat('░', $barWidth - $gcfFilled);
+
+    $symbolCount = count($p->symbols);
+    $edgeCount = count($p->edges);
+    fwrite(STDOUT, "Payload: {$symbolCount} symbols, {$edgeCount} edges\n\n");
+    fwrite(STDOUT, "  JSON  {$jsonBar}  {$jsonTokens} tokens\n");
+    fwrite(STDOUT, "  GCF   {$gcfBar}  {$gcfTokens} tokens\n");
+    fwrite(STDOUT, sprintf("\n  Savings: %.0f%% fewer tokens with GCF\n", $savings));
+
+    return 0;
+}
+
+function printVersion(): int
+{
+    fwrite(STDOUT, "gcf-php ".GCF_PHP_VERSION."\n");
+
+    return 0;
+}
+
+function unknownCommand(string $cmd): int
+{
+    fwrite(STDERR, "unknown command: {$cmd}\n\n");
+    fwrite(STDERR, USAGE);
+
+    return 1;
+}
+
+exit(main($argv));
