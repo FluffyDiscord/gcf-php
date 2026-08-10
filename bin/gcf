@@ -18,7 +18,7 @@ foreach ([__DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'] a
     }
 }
 
-const GCF_PHP_VERSION = '0.1.0';
+const GCF_PHP_VERSION = '1.0.0';
 
 const USAGE = <<<'USAGE'
 gcf - token-optimized wire format for LLM tool responses
