@@ -1,0 +1,23 @@
+{
+  "description": "When first row is missing a nested field, path columns emit ~ for absent leaves",
+  "expected": "GCF profile=generic\n## items [2]{id,total,\"meta>region\",\"meta>source\",\"meta>version\"}\n1|50|~|~|~\n2|75|us-east|api|\"2.1\"\n",
+  "input": {
+    "items": [
+      {
+        "id": 1,
+        "total": 50
+      },
+      {
+        "id": 2,
+        "meta": {
+          "region": "us-east",
+          "source": "api",
+          "version": "2.1"
+        },
+        "total": 75
+      }
+    ]
+  },
+  "name": "no_inline_when_first_row_missing_field",
+  "operation": "encode"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "single_member_not_keyed",
+  "description": "A single-member map is not encoded as a keyed table (a one-row table has no benefit); it uses ordinary section encoding. A keyed map requires at least two members (SPEC 7.2a.1)",
+  "operation": "encode",
+  "input": {
+    "only": {
+      "a": 1,
+      "b": 2
+    }
+  },
+  "expected": "GCF profile=generic\n## only\n  a=1\n  b=2\n"
+}

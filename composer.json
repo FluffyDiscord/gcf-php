@@ -1,0 +1,28 @@
+{
+    "name": "tacman/gcf-php",
+    "description": "PHP implementation of GCF (Graph Compact Format), the AI-native wire format for structured data. Generic profile only.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["gcf", "llm", "agent", "wire-format", "serialization"],
+    "homepage": "https://github.com/tacman/gcf-php",
+    "require": {
+        "php": "^8.5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Gcf\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Gcf\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "gt_in_field_name",
+  "description": "Top-level field names containing > MUST be emitted as per-row attachments, not tabular columns, to avoid ambiguity with flattened path columns (spec rule 7.4.6.1.4)",
+  "operation": "roundtrip",
+  "input": [
+    {"id": 1, "a>b": "hello", "name": "Alice"},
+    {"id": 2, "a>b": "world", "name": "Bob"}
+  ],
+  "expected": "GCF profile=generic\n## [2]{id,name}\n@0 1|Alice\n.\"a>b\" =hello\n@1 2|Bob\n.\"a>b\" =world\n"
+}

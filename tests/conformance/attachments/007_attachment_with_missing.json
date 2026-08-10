@@ -1,0 +1,23 @@
+{
+  "name": "attachment_and_missing_in_same_row",
+  "description": "Nested object with same keys is flattened; absent field uses ~",
+  "input": {
+    "items": [
+      {
+        "id": 1,
+        "data": {
+          "x": 1
+        },
+        "extra": "a"
+      },
+      {
+        "id": 2,
+        "data": {
+          "x": 2
+        }
+      }
+    ]
+  },
+  "expected": "GCF profile=generic\n## items [2]{id,\"data>x\",extra}\n1|1|a\n2|2|~\n",
+  "operation": "encode"
+}

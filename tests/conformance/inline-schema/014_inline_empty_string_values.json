@@ -1,0 +1,26 @@
+{
+  "description": "Flattened path columns with empty string values in cells",
+  "expected": "GCF profile=generic\n## records [2]{id,\"info>desc\",\"info>name\",\"info>tag\"}\n1|\"\"|test|active\n2|something|\"\"|\"\"\n",
+  "input": {
+    "records": [
+      {
+        "id": 1,
+        "info": {
+          "desc": "",
+          "name": "test",
+          "tag": "active"
+        }
+      },
+      {
+        "id": 2,
+        "info": {
+          "desc": "something",
+          "name": "",
+          "tag": ""
+        }
+      }
+    ]
+  },
+  "name": "inline_schema_empty_string_values",
+  "operation": "encode"
+}

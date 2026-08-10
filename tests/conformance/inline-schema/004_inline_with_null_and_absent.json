@@ -1,0 +1,26 @@
+{
+  "description": "Flattened path columns handle null values within the nested object",
+  "expected": "GCF profile=generic\n## users [2]{id,\"profile>bio\",\"profile>name\",\"profile>role\"}\n1|-|Alice|admin\n2|Developer|Bob|user\n",
+  "input": {
+    "users": [
+      {
+        "id": 1,
+        "profile": {
+          "bio": null,
+          "name": "Alice",
+          "role": "admin"
+        }
+      },
+      {
+        "id": 2,
+        "profile": {
+          "bio": "Developer",
+          "name": "Bob",
+          "role": "user"
+        }
+      }
+    ]
+  },
+  "name": "inline_schema_with_null_and_absent",
+  "operation": "encode"
+}

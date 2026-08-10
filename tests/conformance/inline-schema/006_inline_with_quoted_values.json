@@ -1,0 +1,26 @@
+{
+  "description": "Flattened path columns with values requiring quoting (pipes, commas, special strings)",
+  "expected": "GCF profile=generic\n## records [2]{id,\"meta>flag\",\"meta>note\",\"meta>tag\"}\n1|\"true\"|\"hello, world\"|\"a|b\"\n2|\"false\"|\"-\"|c\n",
+  "input": {
+    "records": [
+      {
+        "id": 1,
+        "meta": {
+          "flag": "true",
+          "note": "hello, world",
+          "tag": "a|b"
+        }
+      },
+      {
+        "id": 2,
+        "meta": {
+          "flag": "false",
+          "note": "-",
+          "tag": "c"
+        }
+      }
+    ]
+  },
+  "name": "inline_schema_quoted_values",
+  "operation": "encode"
+}

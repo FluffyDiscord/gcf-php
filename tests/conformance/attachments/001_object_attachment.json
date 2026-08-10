@@ -1,0 +1,26 @@
+{
+  "name": "tabular_with_object_attachment",
+  "description": "Nested object with same keys across rows is flattened into path columns",
+  "input": {
+    "orders": [
+      {
+        "id": 1,
+        "total": 249.99,
+        "customer": {
+          "name": "Alice",
+          "tier": "premium"
+        }
+      },
+      {
+        "id": 2,
+        "total": 89.50,
+        "customer": {
+          "name": "Bob",
+          "tier": "standard"
+        }
+      }
+    ]
+  },
+  "expected": "GCF profile=generic\n## orders [2]{id,total,\"customer>name\",\"customer>tier\"}\n1|249.99|Alice|premium\n2|89.5|Bob|standard\n",
+  "operation": "encode"
+}

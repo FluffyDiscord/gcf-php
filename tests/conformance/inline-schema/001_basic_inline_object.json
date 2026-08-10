@@ -1,0 +1,28 @@
+{
+  "description": "Nested object with 3+ same-shape scalar fields is flattened into path columns",
+  "expected": "GCF profile=generic\n## orders [2]{\"customer>email\",\"customer>name\",\"customer>tier\",id,total}\nalice@test.com|Alice|premium|1|99.99\nbob@test.com|Bob|standard|2|49.99\n",
+  "input": {
+    "orders": [
+      {
+        "customer": {
+          "email": "alice@test.com",
+          "name": "Alice",
+          "tier": "premium"
+        },
+        "id": 1,
+        "total": 99.99
+      },
+      {
+        "customer": {
+          "email": "bob@test.com",
+          "name": "Bob",
+          "tier": "standard"
+        },
+        "id": 2,
+        "total": 49.99
+      }
+    ]
+  },
+  "name": "basic_inline_object_schema",
+  "operation": "encode"
+}
