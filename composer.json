@@ -1,10 +1,10 @@
 {
-    "name": "tacman/gcf-php",
+    "name": "fluffydiscord/gcf-php",
     "description": "PHP implementation of GCF (Graph Compact Format), the AI-native wire format for structured data. Generic and graph profiles, delta encoding, session dedup, streaming.",
     "type": "library",
     "license": "MIT",
     "keywords": ["gcf", "llm", "agent", "wire-format", "serialization"],
-    "homepage": "https://github.com/tacman/gcf-php",
+    "homepage": "https://github.com/FluffyDiscord/gcf-php",
     "bin": ["bin/gcf"],
     "require": {
         "php": ">=8.1"

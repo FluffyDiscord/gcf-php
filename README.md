@@ -1,5 +1,8 @@
 # gcf-php
 
+> Fork of [tacman/gcf-php](https://github.com/tacman/gcf-php), published as `fluffydiscord/gcf-php`
+> so it can be required on PHP 8.1+. Encoder and decoder output is byte-identical to upstream.
+
 A PHP implementation of [GCF (Graph Compact Format)](https://www.gcformat.com/) — a token-efficient
 wire format for structured data designed for LLM agent loops. Lossless conversion to/from JSON,
 50-92% fewer tokens depending on data shape.
@@ -15,6 +18,10 @@ from [gcf-python](https://github.com/blackwell-systems/gcf-python) v2.3.0 and tr
 
 PHP 8.1+. Zero runtime dependencies — matching the other six official implementations' permanent
 zero-dependency commitment.
+
+```bash
+composer require fluffydiscord/gcf-php
+```
 
 ## Usage
 
